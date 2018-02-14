@@ -19,8 +19,8 @@ tiny-dnn (original)
      << fc(120, 10, true, backend_type)
      << tanh();
 ```
-conv(32, 32, 5, 1, 6...) -> tanh() -> ave_pool(**28**, **28**, 6, 2)  
-**28** = (32 - 5 + 1) / stride  
+conv(32, 32, 5, 1, 6...) -> tanh() -> ave_pool(<span style="color: red; ">**28**</span>, <span style="color: red; ">**28**</span>, 6, 2)  
+<span style="color: red; ">**28**</span> = (32 - 5 + 1) / stride  
 **This calculation is troublesome!!**  
 
 **I tried not to calculate the output size**
