@@ -2,8 +2,8 @@
 
 ## Code Examples
 
-input image 32x32x1 channle 
-tiny-dnn (original)
+input image 32x32x1 channle  
+tiny-dnn (original)  
 
 ```cpp
   nn << conv(32, 32, 5, 1, 6, padding::valid, true, 1, 1, backend_type)
@@ -19,13 +19,11 @@ tiny-dnn (original)
      << fc(120, 10, true, backend_type)
      << tanh();
 ```
-conv(32, 32, 5, 1, 6...) -> tanh() -> ave_pool(**28**, **28**, 6, 2) 
+conv(32, 32, 5, 1, 6...) -> tanh() -> ave_pool(**28**, **28**, 6, 2)  
+**28** = (32 - 5 + 1) / stride  
+**This calculation is troublesome!! **  
 
-**28** = (32 - 5 + 1) / stride 
-
-**This calculation is troublesome!! **
-
-**I tried not to calculate the output size ** 
+**I tried not to calculate the output size **  
 
 ```cpp
  	LayerInfo layers(in_w, in_h, in_map);
