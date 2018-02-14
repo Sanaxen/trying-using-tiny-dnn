@@ -26,7 +26,7 @@ conv(32, 32, 5, 1, 6...) -> tanh() -> ave_pool(<span style="color: red; ">**28**
 **I tried not to calculate the output size**
 
 ```cpp
-     LayerInfo layers(in_w, in_h, in_map);
+     LayerInfo layers(32, 32, 1);
      nn << layers.add_cnv(6, 5, 1, padding::valid);
      nn << tanh();
      nn << layers.add_avepool(2, 2);
