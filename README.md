@@ -26,17 +26,17 @@ conv(32, 32, 5, 1, 6...) -> tanh() -> ave_pool(**28**, **28**, 6, 2)
 **I tried not to calculate the output size**
 
 ```cpp
- 	LayerInfo layers(in_w, in_h, in_map);
-	nn << layers.add_cnv(6, 5, 1, padding::valid);
-	nn << tanh();
-	nn << layers.add_avepool(2, 2);
-	nn << tanh();
-	nn << layers.add_cnv(16, 5, 1, padding::valid, true, connection_table(tbl, 6, 16));
-	nn << tanh();
-	nn << layers.add_avepool(2, 2);
-	nn << tanh();
-	nn << layers.add_cnv(120, 5, 1, padding::valid);
-	nn << tanh();
-	nn << layers.add_fc(10);
-	nn << tanh();;
+     LayerInfo layers(in_w, in_h, in_map);
+     nn << layers.add_cnv(6, 5, 1, padding::valid);
+     nn << tanh();
+     nn << layers.add_avepool(2, 2);
+     nn << tanh();
+     nn << layers.add_cnv(16, 5, 1, padding::valid, true, connection_table(tbl, 6, 16));
+     nn << tanh();
+     nn << layers.add_avepool(2, 2);
+     nn << tanh();
+     nn << layers.add_cnv(120, 5, 1, padding::valid);
+     nn << tanh();
+     nn << layers.add_fc(10);
+     nn << tanh();;
 
