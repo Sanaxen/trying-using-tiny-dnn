@@ -1,4 +1,4 @@
-# trying-using-tiny-dnn
+# trying using [**tiny-dnn**](https://github.com/tiny-dnn/tiny-dnn)
 
 ## Code Examples
 
