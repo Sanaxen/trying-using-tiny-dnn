@@ -1,0 +1,2 @@
+*.db
+example/cifar10_sample/src/cifar10_loader.hpp.bak
