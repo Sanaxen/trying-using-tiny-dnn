@@ -812,7 +812,7 @@ class network {
     return label_t(max_index(fprop(in)));
   }
 
- private:
+ //private:
   template <typename Layer>
   friend network<sequential> &operator<<(network<sequential> &n, Layer &&l);
 
