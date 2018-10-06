@@ -42,6 +42,44 @@ using softmax = tiny_dnn::softmax_layer;
 
 using tiny_dnn::core::connection_table;
 
+template <typename N>
+inline void set_train(N &nn/*, const int seq_len*/) {
+	nn.set_netphase(tiny_dnn::net_phase::train);
+	for (unsigned int i = 0; i < nn.layer_size(); i++) {
+		try {
+			nn.template at<tiny_dnn::dropout_layer>(i).set_context(
+				tiny_dnn::net_phase::train);
+		}
+		catch (tiny_dnn::nn_error &err) {
+		}
+		try {
+			//nn.template at<tiny_dnn::recurrent_layer>(i).seq_len(seq_len);
+			//nn.template at<tiny_dnn::recurrent_layer>(i).bptt_max(seq_len);
+			nn.template at<tiny_dnn::recurrent_layer>(i).clear_state();
+		}
+		catch (tiny_dnn::nn_error &err) {
+		}
+	}
+}
+
+template <typename N>
+inline void set_test(N &nn) {
+	nn.set_netphase(tiny_dnn::net_phase::test);
+	for (unsigned int i = 0; i < nn.layer_size(); i++) {
+		try {
+			nn.template at<tiny_dnn::dropout_layer>(i).set_context(
+				tiny_dnn::net_phase::test);
+		}
+		catch (tiny_dnn::nn_error &err) {
+		}
+		try {
+			nn.template at<tiny_dnn::recurrent_layer>(i).clear_state();
+		}
+		catch (tiny_dnn::nn_error &err) {
+		}
+	}
+}
+
 namespace tiny_dnn {
 	template <typename NetType>
 	class network2 : public network<NetType>
@@ -185,6 +223,12 @@ class LayerInfo
 	tiny_dnn::core::backend_t      backend_type;
 public:
 
+	inline void _editInfo(size_t out_w_, size_t out_h_, size_t out_map_)
+	{
+		out_w = out_w_;
+		out_h = out_h_;
+		out_map = out_map_;
+	}
 	inline LayerInfo(size_t iw, size_t ih, size_t imap, tiny_dnn::core::backend_t backend_type_ = tiny_dnn::core::default_engine())
 	{
 		out_w = iw;
