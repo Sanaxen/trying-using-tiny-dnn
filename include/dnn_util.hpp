@@ -34,6 +34,8 @@ using ave_pool = tiny_dnn::layers::ave_pool;
 using max_pool = tiny_dnn::max_pooling_layer;
 using deconv = tiny_dnn::deconvolutional_layer;
 using padding = tiny_dnn::padding;
+using recurrent = tiny_dnn::recurrent_layer;
+using recurrent_params = tiny_dnn::recurrent_layer_parameters;
 
 using relu = tiny_dnn::relu_layer;
 using leaky_relu = tiny_dnn::leaky_relu_layer;
@@ -43,7 +45,7 @@ using softmax = tiny_dnn::softmax_layer;
 using tiny_dnn::core::connection_table;
 
 template <typename N>
-inline void set_train(N &nn/*, const int seq_len*/) {
+inline void set_train(N &nn, const int seq_len=0) {
 	nn.set_netphase(tiny_dnn::net_phase::train);
 	for (unsigned int i = 0; i < nn.layer_size(); i++) {
 		try {
@@ -53,8 +55,8 @@ inline void set_train(N &nn/*, const int seq_len*/) {
 		catch (tiny_dnn::nn_error &err) {
 		}
 		try {
-			//nn.template at<tiny_dnn::recurrent_layer>(i).seq_len(seq_len);
-			//nn.template at<tiny_dnn::recurrent_layer>(i).bptt_max(seq_len);
+			nn.template at<tiny_dnn::recurrent_layer>(i).seq_len(seq_len);
+			nn.template at<tiny_dnn::recurrent_layer>(i).bptt_max(1e9);
 			nn.template at<tiny_dnn::recurrent_layer>(i).clear_state();
 		}
 		catch (tiny_dnn::nn_error &err) {
@@ -63,7 +65,7 @@ inline void set_train(N &nn/*, const int seq_len*/) {
 }
 
 template <typename N>
-inline void set_test(N &nn) {
+inline void set_test(N &nn, const int seq_len=0) {
 	nn.set_netphase(tiny_dnn::net_phase::test);
 	for (unsigned int i = 0; i < nn.layer_size(); i++) {
 		try {
@@ -72,6 +74,19 @@ inline void set_test(N &nn) {
 		}
 		catch (tiny_dnn::nn_error &err) {
 		}
+		try {
+			nn.template at<tiny_dnn::recurrent_layer>(i).seq_len(seq_len);
+			nn.template at<tiny_dnn::recurrent_layer>(i).bptt_max(1e9);
+			nn.template at<tiny_dnn::recurrent_layer>(i).clear_state();
+		}
+		catch (tiny_dnn::nn_error &err) {
+		}
+	}
+}
+
+template <typename N>
+inline void rnn_state_reset(N &nn) {
+	for (unsigned int i = 0; i < nn.layer_size(); i++) {
 		try {
 			nn.template at<tiny_dnn::recurrent_layer>(i).clear_state();
 		}
@@ -154,7 +169,7 @@ namespace tiny_dnn {
 				for (size_t i = 0; i < input_size && !stop_training_;
 					i += batch_size, k += batch_size) {
 
-					if (k+ batch_size > inputs.size())
+					if (k + batch_size > inputs.size())
 					{
 						load_tensor_data();
 						k = 0;
@@ -198,6 +213,7 @@ namespace tiny_dnn {
 class DNNParameter
 {
 public:
+	size_t seq_len = 10;
 	float_t learning_rate = 1;
 	size_t n_train_epochs = 30;
 	std::string  data_dir_path  = "";
@@ -265,14 +281,14 @@ public:
 		return  tiny_dnn::class_name();\
 	}
 
-	inline  tiny_dnn::relu_layer relu()				{ ACTIVATIN_FUNC(relu_layer)}
-	inline  tiny_dnn::leaky_relu_layer leaky_relu()	{ ACTIVATIN_FUNC(leaky_relu_layer)}
-	inline  tiny_dnn::elu_layer elu()				{ ACTIVATIN_FUNC(elu_layer)}
-	inline  tiny_dnn::tanh_layer tanh()				{ ACTIVATIN_FUNC(tanh_layer)}
-	inline  tiny_dnn::sigmoid_layer sigmoid()		{ ACTIVATIN_FUNC(sigmoid_layer)}
-	inline  tiny_dnn::softmax_layer softmax()		{ ACTIVATIN_FUNC(softmax_layer)}
-	inline  tiny_dnn::softplus_layer softplus()		{ ACTIVATIN_FUNC(softplus_layer)}
-	inline  tiny_dnn::softsign_layer softsign()		{ ACTIVATIN_FUNC(softsign_layer)}
+	inline  tiny_dnn::relu_layer relu() { ACTIVATIN_FUNC(relu_layer) }
+	inline  tiny_dnn::leaky_relu_layer leaky_relu() { ACTIVATIN_FUNC(leaky_relu_layer) }
+	inline  tiny_dnn::elu_layer elu() { ACTIVATIN_FUNC(elu_layer) }
+	inline  tiny_dnn::tanh_layer tanh() { ACTIVATIN_FUNC(tanh_layer) }
+	inline  tiny_dnn::sigmoid_layer sigmoid() { ACTIVATIN_FUNC(sigmoid_layer) }
+	inline  tiny_dnn::softmax_layer softmax() { ACTIVATIN_FUNC(softmax_layer) }
+	inline  tiny_dnn::softplus_layer softplus() { ACTIVATIN_FUNC(softplus_layer) }
+	inline  tiny_dnn::softsign_layer softsign() { ACTIVATIN_FUNC(softsign_layer) }
 
 
 	inline tiny_dnn::convolutional_layer add_cnv(
@@ -460,6 +476,39 @@ public:
 		printf("fully_connected_layer %zdx%zd fmap:%zd->", in_w, in_h, in_map);
 		printf(" %zdx%d fmap:%d\n", out_dim, 1, 1);
 		return layer;
+	}
+	inline tiny_dnn::recurrent_layer add_rnn(
+		std::string& rnn_type,
+		size_t hidden_size,
+		int seq_len,
+		const recurrent_params& prmam
+	)
+	{
+		size_t in_w = out_w;
+		size_t in_h = out_h;
+		size_t in_map = out_map;
+		size_t input_size = in_w*in_h*in_map;
+
+		out_w = hidden_size;
+		out_h = 1;
+		out_map = 1;
+
+		printf("recurrent_layer_%s %zdx%zd fmap:%zd->", rnn_type.c_str(), in_w, in_h, in_map);
+		printf(" %zdx%d fmap:%d\n", hidden_size, 1, 1);
+
+		if (rnn_type == "rnn") {
+			return recurrent(tiny_dnn::rnn(input_size, hidden_size), seq_len, prmam);
+		}
+		else if (rnn_type == "gru") {
+			return recurrent(tiny_dnn::gru(input_size, hidden_size), seq_len, prmam);
+		}
+		else if (rnn_type == "lstm") {
+			return recurrent(tiny_dnn::lstm(input_size, hidden_size), seq_len, prmam);
+		}
+		else
+		{
+			return recurrent(tiny_dnn::rnn(input_size, hidden_size), seq_len, prmam);
+		}
 	}
 };
 
